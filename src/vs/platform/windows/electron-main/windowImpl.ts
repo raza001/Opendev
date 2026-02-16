@@ -854,8 +854,9 @@ export class CodeWindow extends BaseWindow implements ICodeWindow {
 
 		// Inject headers when requests are incoming
 		const urls = ['https://*.vsassets.io/*'];
-		if (this.productService.extensionsGallery?.serviceUrl) {
-			const serviceUrl = URI.parse(this.productService.extensionsGallery.serviceUrl);
+		const extensionsGalleryServiceUrl = this.productService.extensionsGallery?.serviceUrl ?? this.productService.openVsxGallery?.serviceUrl;
+		if (extensionsGalleryServiceUrl) {
+			const serviceUrl = URI.parse(extensionsGalleryServiceUrl);
 			urls.push(`${serviceUrl.scheme}://${serviceUrl.authority}/*`);
 		}
 		this._win.webContents.session.webRequest.onBeforeSendHeaders({ urls }, async (details, cb) => {

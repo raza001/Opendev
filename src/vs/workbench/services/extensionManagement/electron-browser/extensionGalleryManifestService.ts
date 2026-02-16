@@ -84,7 +84,7 @@ export class WorkbenchExtensionGalleryManifestService extends ExtensionGalleryMa
 	}
 
 	private async doGetExtensionGalleryManifest(): Promise<void> {
-		const defaultServiceUrl = this.productService.extensionsGallery?.serviceUrl;
+		const defaultServiceUrl = this.getGalleryConfig()?.serviceUrl;
 		if (!defaultServiceUrl) {
 			return;
 		}
@@ -149,7 +149,7 @@ export class WorkbenchExtensionGalleryManifestService extends ExtensionGalleryMa
 
 	private checkAccess(account: IDefaultAccount): boolean {
 		this.logService.debug('[Marketplace] Checking Account SKU access for configured gallery', account.entitlementsData?.access_type_sku);
-		if (account.entitlementsData?.access_type_sku && this.productService.extensionsGallery?.accessSKUs?.includes(account.entitlementsData.access_type_sku)) {
+		if (account.entitlementsData?.access_type_sku && this.getGalleryConfig()?.accessSKUs?.includes(account.entitlementsData.access_type_sku)) {
 			this.logService.debug('[Marketplace] Account has access to configured gallery');
 			return true;
 		}

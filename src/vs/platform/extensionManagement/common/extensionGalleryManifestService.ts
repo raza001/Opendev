@@ -11,12 +11,14 @@ import { FilterType, SortBy } from './extensionManagement.js';
 
 type ExtensionGalleryConfig = {
 	readonly serviceUrl: string;
-	readonly itemUrl: string;
-	readonly publisherUrl: string;
-	readonly resourceUrlTemplate: string;
-	readonly extensionUrlTemplate: string;
-	readonly controlUrl: string;
-	readonly nlsBaseUrl: string;
+	readonly itemUrl?: string;
+	readonly publisherUrl?: string;
+	readonly resourceUrlTemplate?: string;
+	readonly extensionUrlTemplate?: string;
+	readonly controlUrl?: string;
+	readonly nlsBaseUrl?: string;
+	readonly allPublicRepositorySigned?: boolean;
+	readonly allPrivateRepositorySigned?: boolean;
 };
 
 export class ExtensionGalleryManifestService extends Disposable implements IExtensionGalleryManifestService {
@@ -26,7 +28,7 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
 	readonly onDidChangeExtensionGalleryManifestStatus = Event.None;
 
 	get extensionGalleryManifestStatus(): ExtensionGalleryManifestStatus {
-		return !!this.productService.extensionsGallery?.serviceUrl ? ExtensionGalleryManifestStatus.Available : ExtensionGalleryManifestStatus.Unavailable;
+		return !!this.getGalleryConfig()?.serviceUrl ? ExtensionGalleryManifestStatus.Available : ExtensionGalleryManifestStatus.Unavailable;
 	}
 
 	constructor(
@@ -35,8 +37,12 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
 		super();
 	}
 
+	protected getGalleryConfig(): ExtensionGalleryConfig | undefined {
+		return this.productService.extensionsGallery ?? this.productService.openVsxGallery;
+	}
+
 	async getExtensionGalleryManifest(): Promise<IExtensionGalleryManifest | null> {
-		const extensionsGallery = this.productService.extensionsGallery as ExtensionGalleryConfig | undefined;
+		const extensionsGallery = this.getGalleryConfig();
 		if (!extensionsGallery?.serviceUrl) {
 			return null;
 		}
@@ -220,7 +226,8 @@ export class ExtensionGalleryManifestService extends Disposable implements IExte
 					flags,
 				},
 				signing: {
-					allPublicRepositorySigned: true,
+					allPublicRepositorySigned: extensionsGallery.allPublicRepositorySigned ?? true,
+					allPrivateRepositorySigned: extensionsGallery.allPrivateRepositorySigned,
 				}
 			}
 		};

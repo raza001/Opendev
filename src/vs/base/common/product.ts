@@ -106,10 +106,26 @@ export interface IProductConfiguration {
 
 	readonly extensionsGallery?: {
 		readonly serviceUrl: string;
-		readonly controlUrl: string;
-		readonly extensionUrlTemplate: string;
-		readonly resourceUrlTemplate: string;
-		readonly nlsBaseUrl: string;
+		readonly controlUrl?: string;
+		readonly extensionUrlTemplate?: string;
+		readonly resourceUrlTemplate?: string;
+		readonly nlsBaseUrl?: string;
+		readonly itemUrl?: string;
+		readonly publisherUrl?: string;
+		readonly allPublicRepositorySigned?: boolean;
+		readonly allPrivateRepositorySigned?: boolean;
+		readonly accessSKUs?: string[];
+	};
+	readonly openVsxGallery?: {
+		readonly serviceUrl: string;
+		readonly controlUrl?: string;
+		readonly extensionUrlTemplate?: string;
+		readonly resourceUrlTemplate?: string;
+		readonly nlsBaseUrl?: string;
+		readonly itemUrl?: string;
+		readonly publisherUrl?: string;
+		readonly allPublicRepositorySigned?: boolean;
+		readonly allPrivateRepositorySigned?: boolean;
 		readonly accessSKUs?: string[];
 	};
 
