@@ -227,6 +227,7 @@ export function hygiene(some: NodeJS.ReadWriteStream | string[] | undefined, run
 
 function createGitIndexVinyls(paths: string[]): Promise<VinylFile[]> {
 	const repositoryPath = process.cwd();
+	const gitShowMaxBuffer = 100 * 1024 * 1024;
 
 	const fns = paths.map((relativePath) => () =>
 		new Promise<VinylFile | null>((c, e) => {
@@ -240,9 +241,10 @@ function createGitIndexVinyls(paths: string[]): Promise<VinylFile[]> {
 					return e(err);
 				}
 
-				cp.exec(
-					process.platform === 'win32' ? `git show :${relativePath}` : `git show ':${relativePath}'`,
-					{ maxBuffer: stat.size, encoding: 'buffer' },
+				cp.execFile(
+					'git',
+					['show', `:${relativePath}`],
+					{ maxBuffer: gitShowMaxBuffer, encoding: 'buffer' },
 					(err, out) => {
 						if (err) {
 							return e(err);

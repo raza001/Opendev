@@ -3,7 +3,7 @@
   "version": "1.110.0",
   "distro": "7ae76fff0c4611dd384784edb63189ef932327d6",
   "author": {
-    "name": "Microsoft Corporation"
+    "name": "OpenDev Team"
   },
   "license": "MIT",
   "main": "./out/main.js",
@@ -235,10 +235,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/microsoft/vscode.git"
+    "url": "https://github.com/opendev/opendev.git"
   },
   "bugs": {
-    "url": "https://github.com/microsoft/vscode/issues"
+    "url": "https://github.com/opendev/opendev/issues"
   },
   "optionalDependencies": {
     "windows-foreground-love": "0.6.1"
