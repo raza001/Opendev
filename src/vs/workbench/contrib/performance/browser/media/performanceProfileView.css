@@ -1,0 +1,209 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.opendev-performance-view {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 12px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	color: var(--vscode-foreground);
+	animation: odvFadeIn 180ms ease-out;
+}
+
+.odv-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 14px;
+	border-radius: 12px;
+	border: 1px solid var(--vscode-widget-border, rgba(127, 127, 127, 0.35));
+	background:
+		radial-gradient(circle at 0% 0%, rgba(88, 142, 255, 0.24), rgba(88, 142, 255, 0) 48%),
+		linear-gradient(135deg, rgba(25, 31, 43, 0.85), rgba(15, 17, 26, 0.9));
+}
+
+.odv-header-title-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.odv-title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 700;
+	letter-spacing: 0.4px;
+}
+
+.odv-subtitle {
+	margin: 0;
+	font-size: 12px;
+	opacity: 0.8;
+}
+
+.odv-header-meta {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 8px;
+}
+
+.odv-profile-badge {
+	padding: 5px 10px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.4px;
+	text-transform: uppercase;
+	border: 1px solid transparent;
+}
+
+.odv-profile-badge--balanced {
+	background: rgba(88, 142, 255, 0.14);
+	border-color: rgba(88, 142, 255, 0.55);
+	color: #b7ceff;
+}
+
+.odv-profile-badge--low {
+	background: rgba(88, 214, 141, 0.14);
+	border-color: rgba(88, 214, 141, 0.6);
+	color: #baf9cf;
+}
+
+.odv-last-updated {
+	font-size: 11px;
+	opacity: 0.78;
+}
+
+.odv-metrics-grid {
+	display: grid;
+	gap: 10px;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.odv-card {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 12px;
+	border-radius: 12px;
+	border: 1px solid var(--vscode-widget-border, rgba(127, 127, 127, 0.35));
+	background:
+		linear-gradient(160deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.16));
+}
+
+.odv-card-label {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.6px;
+	text-transform: uppercase;
+	opacity: 0.78;
+}
+
+.odv-card-value {
+	font-size: 23px;
+	font-weight: 700;
+	line-height: 1.1;
+}
+
+.odv-card-subtitle {
+	font-size: 11px;
+	opacity: 0.72;
+}
+
+.odv-meter {
+	height: 8px;
+	border-radius: 999px;
+	overflow: hidden;
+	background: rgba(120, 120, 120, 0.25);
+	border: 1px solid rgba(120, 120, 120, 0.35);
+}
+
+.odv-meter-fill {
+	height: 100%;
+	width: 0;
+	border-radius: inherit;
+	transition: width 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.odv-meter-fill--cpu {
+	background: linear-gradient(90deg, #66e8ff, #5d8dff);
+}
+
+.odv-meter-fill--ram {
+	background: linear-gradient(90deg, #90ffbf, #3ad4b9);
+}
+
+.odv-history-grid {
+	display: grid;
+	gap: 10px;
+	grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.odv-card--history {
+	padding-bottom: 10px;
+}
+
+.odv-history-bars {
+	display: grid;
+	grid-template-columns: repeat(24, minmax(0, 1fr));
+	align-items: end;
+	gap: 3px;
+	height: 88px;
+	padding: 8px 4px 0;
+	border-radius: 8px;
+	background: rgba(255, 255, 255, 0.02);
+}
+
+.odv-history-bar {
+	display: block;
+	min-height: 5%;
+	border-radius: 999px 999px 3px 3px;
+	transition: height 260ms ease-out;
+}
+
+.odv-history-bars--cpu .odv-history-bar {
+	background: linear-gradient(180deg, rgba(101, 235, 255, 0.96), rgba(85, 108, 255, 0.68));
+}
+
+.odv-history-bars--ram .odv-history-bar {
+	background: linear-gradient(180deg, rgba(151, 255, 194, 0.95), rgba(51, 199, 180, 0.7));
+}
+
+.odv-status {
+	padding: 10px 12px;
+	border-radius: 8px;
+	border: 1px solid var(--vscode-widget-border, rgba(127, 127, 127, 0.35));
+	background: rgba(255, 255, 255, 0.02);
+	font-size: 12px;
+	opacity: 0.9;
+}
+
+@keyframes odvFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (max-width: 640px) {
+	.odv-header {
+		flex-direction: column;
+	}
+
+	.odv-header-meta {
+		align-items: flex-start;
+	}
+}

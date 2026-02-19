@@ -9,6 +9,7 @@ import { ServicesAccessor } from '../../../../editor/browser/editorExtensions.js
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ContextKeyExpr, ContextKeyExpression, IContextKey, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
+import { IsWebContext } from '../../../../platform/contextkey/common/contextkeys.js';
 import { IUserDataProfile, IUserDataProfilesService } from '../../../../platform/userDataProfile/common/userDataProfile.js';
 import { IWorkbenchContribution } from '../../../common/contributions.js';
 import { ILifecycleService, LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
@@ -16,6 +17,7 @@ import { CURRENT_PROFILE_CONTEXT, HAS_PROFILES_CONTEXT, IS_CURRENT_PROFILE_TRANS
 import { IQuickInputService, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
 import { URI } from '../../../../base/common/uri.js';
+import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { IWorkspaceTagsService } from '../../tags/common/workspaceTags.js';
@@ -36,6 +38,8 @@ import { IBrowserWorkbenchEnvironmentService } from '../../../services/environme
 import { Extensions as DndExtensions, IDragAndDropContributionRegistry, IResourceDropHandler } from '../../../../platform/dnd/browser/dnd.js';
 import { IUriIdentityService } from '../../../../platform/uriIdentity/common/uriIdentity.js';
 import { ITextEditorService } from '../../../services/textfile/common/textEditorService.js';
+import { IFileService } from '../../../../platform/files/common/files.js';
+import { dirname, joinPath } from '../../../../base/common/resources.js';
 
 export const OpenProfileMenu = new MenuId('OpenProfile');
 const ProfilesMenu = new MenuId('Profiles');
@@ -60,6 +64,7 @@ export class UserDataProfilesWorkbenchContribution extends Disposable implements
 		@IInstantiationService private readonly instantiationService: IInstantiationService,
 		@ILifecycleService private readonly lifecycleService: ILifecycleService,
 		@IURLService private readonly urlService: IURLService,
+		@IFileService private readonly fileService: IFileService,
 		@IBrowserWorkbenchEnvironmentService environmentService: IBrowserWorkbenchEnvironmentService
 	) {
 		super();
@@ -172,6 +177,7 @@ export class UserDataProfilesWorkbenchContribution extends Disposable implements
 
 		this.registerCreateFromCurrentProfileAction();
 		this.registerNewProfileAction();
+		this.registerImportFromVSCodeAction();
 		this.registerDeleteProfileAction();
 
 		this.registerHelpAction();
@@ -475,6 +481,115 @@ export class UserDataProfilesWorkbenchContribution extends Disposable implements
 				return editor?.createNewProfile();
 			}
 		}));
+	}
+
+	private registerImportFromVSCodeAction(): void {
+		const that = this;
+		this._register(registerAction2(class ImportFromVSCodeAction extends Action2 {
+			constructor() {
+				super({
+					id: 'workbench.profiles.actions.importFromVSCode',
+					title: localize2('import from vscode profile', "Import from VS Code..."),
+					category: PROFILES_CATEGORY,
+					f1: true,
+					precondition: IsWebContext.toNegated(),
+					menu: [
+						{
+							id: OpenProfileMenu,
+							group: '1_manage_profiles',
+							order: 2
+						}
+					]
+				});
+			}
+
+			async run(accessor: ServicesAccessor): Promise<void> {
+				const notificationService = accessor.get(INotificationService);
+				const userDataProfileImportExportService = accessor.get(IUserDataProfileImportExportService);
+
+				const sourceProfile = await that.getVSCodeSourceProfile();
+				if (!sourceProfile) {
+					notificationService.warn(localize(
+						'vscode profile not found',
+						"Could not find a VS Code profile to import. Expected a 'Code/User' folder next to the current app data folder."
+					));
+					return;
+				}
+
+				const importedProfile = await userDataProfileImportExportService.createFromProfile(sourceProfile, {
+					name: that.getUniqueImportedProfileName(),
+					resourceTypeFlags: {
+						settings: true,
+						keybindings: true,
+						tasks: true,
+						snippets: true,
+						extensions: false,
+						globalState: false,
+						mcp: false
+					}
+				}, CancellationToken.None);
+
+				if (!importedProfile) {
+					return;
+				}
+
+				await that.userDataProfileManagementService.switchProfile(importedProfile);
+				notificationService.info(localize(
+					'vscode profile imported',
+					"Imported VS Code settings into profile '{0}' and switched to it.",
+					importedProfile.name
+				));
+			}
+		}));
+	}
+
+	private async getVSCodeSourceProfile(): Promise<IUserDataProfile | undefined> {
+		const currentProfileLocation = this.userDataProfilesService.defaultProfile.location;
+		const currentAppDataHome = dirname(currentProfileLocation);
+		const dataRoot = dirname(currentAppDataHome);
+
+		const vscodeDataHomeCandidates = [
+			joinPath(dataRoot, 'Code', 'User'),
+			joinPath(dataRoot, 'Code - Insiders', 'User'),
+			joinPath(dataRoot, 'Code - OSS', 'User')
+		];
+
+		for (const location of vscodeDataHomeCandidates) {
+			if (await this.fileService.exists(location)) {
+				return {
+					id: `external-${location.path.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+					isDefault: false,
+					name: 'VS Code',
+					location,
+					globalStorageHome: joinPath(location, 'globalStorage'),
+					settingsResource: joinPath(location, 'settings.json'),
+					keybindingsResource: joinPath(location, 'keybindings.json'),
+					tasksResource: joinPath(location, 'tasks.json'),
+					snippetsHome: joinPath(location, 'snippets'),
+					promptsHome: joinPath(location, 'prompts'),
+					extensionsResource: joinPath(location, 'extensions.json'),
+					mcpResource: joinPath(location, 'mcp.json'),
+					cacheHome: joinPath(location, 'CachedData')
+				};
+			}
+		}
+
+		return undefined;
+	}
+
+	private getUniqueImportedProfileName(): string {
+		const baseName = localize('imported from vscode profile name', "VS Code (Imported)");
+		const existingNames = new Set(this.userDataProfilesService.profiles.map(profile => profile.name));
+		if (!existingNames.has(baseName)) {
+			return baseName;
+		}
+		for (let index = 2; index < Number.MAX_SAFE_INTEGER; index++) {
+			const candidate = `${baseName} ${index}`;
+			if (!existingNames.has(candidate)) {
+				return candidate;
+			}
+		}
+		return `${baseName} ${Date.now()}`;
 	}
 
 	private registerDeleteProfileAction(): void {
